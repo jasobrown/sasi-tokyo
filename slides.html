@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>SASI In Tokyo</title>
+
+		<meta name="description" content="Advanced secondary indexing in Apache Cassandra">
+		<meta name="author" content="Jason Brown">
+
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<link rel="stylesheet" href="../reveal.js/css/reveal.css">
+		<link rel="stylesheet" href="../reveal.js/css/theme/black.css" id="theme">
+
+		<!-- Theme used for syntax highlighting of code -->
+		<link rel="stylesheet" href="../reveal.js/lib/css/zenburn.css">
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+				<section>
+					<h1>SASI In Tokyo</h1>
+					<h3>Advanced secondary indexing in Apache Cassandra</h3>
+					<p>
+						<small>Jason Brown / <a href="http://twitter.com/jasobrown">@jasobrown</a></small>
+					</p>
+				</section>
+
+				<section>
+					<h2>Agenda</h2>
+					<ul>
+						<p class="fragment">background</p>
+						<p class="fragment">overview</p>
+						<p class="fragment">deep dive</p>
+						<p class="fragment">demo</p>
+					</ul>
+				</section>
+
+				<!-- BACKGROUND SECTION -->
+				<section>
+					<h2>Background</h2>
+					<p>&lt;story time&gt;</p>
+					<aside class="notes">
+						<ul>
+							<li>use case & background of 2I in c*</li>
+							<li>choose solr</li>
+							<li>solr & c* kept crashing</li>
+							<li>double storage</li>
+							<li>dist sys within a dist sys</li>
+							<li>decided just to rewrite 2I</li>
+						</ul>
+					</aside>
+				</section>
+
+				<section>
+					<h2>SASI</h2>
+					<!-- TODO:JEB left align, not center -->
+					<p class="fragment">
+						Sstable</br>
+						Attached</br>
+						Secondary</br>
+						Index</br>
+					</p>
+				</section>
+
+				<section>
+					<!-- TODO:JEB change alignment here: -->
+					<h2>"sassy"</h2>
+					<p class="fragment">
+					<ul>
+						<li>having or showing a rude lack of respect</li>
+						<li>very stylish</li>
+						<li>confident and energetic</li>
+					</ul>
+					</p>
+				</section>
+
+				<section>
+					<h2>生意気</h2>
+				</section>
+
+				<!-- DEMO TIME -->
+				<section>
+					<h2>DEMO TIME</h2>
+				</section>
+
+				<!-- CONCLUSION / WRAP UP / TAKE AWAYS -->
+				<section>
+					<h2>Take aways</h2>
+					<ul>
+						<p class="fragment">- SASI is an advanced, efficient secondary index for Apache Cassandra</p>
+					</ul>
+				</section>
+
+				<section style="text-align: left;">
+					<h1>THE END</h1>
+					<p>
+						- <a href="https://github.com/jasobrown/sasi-tokyo">presentation source</a>
+					</p>
+				</section>
+
+			</div>
+
+		</div>
+
+		<script src="../reveal.js/lib/js/head.min.js"></script>
+		<script src="../reveal.js/js/reveal.js"></script>
+
+		<script>
+
+			// More info https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: false,
+				progress: true,
+				history: true,
+				center: true,
+
+				transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+				// More info https://github.com/hakimel/reveal.js#dependencies
+				dependencies: [
+					{ src: '../reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: '../reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: '../reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: '../reveal.js/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: '../reveal.js/plugin/zoom-js/zoom.js', async: true },
+					{ src: '../reveal.js/plugin/notes/notes.js', async: true }
+				]
+			});
+
+		</script>
+
+	</body>
+</html>
