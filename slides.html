@@ -22,16 +22,15 @@
 	</head>
 
 	<body>
-
 		<div class="reveal">
-
-			<!-- Any section element inside of this container is displayed as a slide -->
 			<div class="slides">
+				<!-- INTRO -->
 				<section>
 					<h1>SASI In Tokyo</h1>
 					<h3>Advanced secondary indexing in Apache Cassandra</h3>
+					<br>
 					<p>
-						<small>Jason Brown / <a href="http://twitter.com/jasobrown">@jasobrown</a></small>
+						<small>Jason Brown / jasedbrown@gmail.com<br/><a href="http://twitter.com/jasobrown">@jasobrown</a></small>
 					</p>
 				</section>
 
@@ -42,6 +41,7 @@
 						<p class="fragment">overview</p>
 						<p class="fragment">deep dive</p>
 						<p class="fragment">demo</p>
+						<p class="fragment">limitations</p>
 					</ul>
 				</section>
 
@@ -75,7 +75,7 @@
 				<section>
 					<!-- TODO:JEB change alignment here: -->
 					<h2>"sassy"</h2>
-					<p class="fragment">
+					<p>
 					<ul>
 						<li>having or showing a rude lack of respect</li>
 						<li>very stylish</li>
@@ -86,6 +86,24 @@
 
 				<section>
 					<h2>生意気</h2>
+				</section>
+
+				<!-- OVERVIEW OF SASI CHANGES -->
+				<section>
+					<h2>Overview</h2>
+					<ul>
+						<p class="fragment">CQL Grammar</p>
+						<p class="fragment">Index configuration</p>
+						<p class="fragment">
+							Indexing<br>
+							- Write path<br>
+							- Read path
+						</p>
+					</ul>
+				</section>
+
+				<section>
+					<h2>CQL Grammar</h2>
 				</section>
 
 				<!-- DEMO TIME -->
@@ -124,7 +142,7 @@
 				history: true,
 				center: true,
 
-				transition: 'slide', // none/fade/slide/convex/concave/zoom
+				transition: 'convex', // none/fade/slide/convex/concave/zoom
 
 				// More info https://github.com/hakimel/reveal.js#dependencies
 				dependencies: [
