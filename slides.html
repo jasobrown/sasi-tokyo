@@ -60,6 +60,10 @@
 						</ul>
 					</aside>
 				</section>
+				<section>
+				  <h2>WARNING!</h2>
+				  <blockquote>"Databases are nasty places"<br/>@cwestin63</blockquote>
+				</section>
 
 				<section>
 					<h2>SASI</h2>
@@ -113,9 +117,70 @@
 
 				<!-- CONCLUSION / WRAP UP / TAKE AWAYS -->
 				<section>
+				  <h2>Limitations</h2>
+					<ul>
+						<p class="fragment">Secondary indicies are not free</p>
+						<p class="fragment">higher memory consumption</p>
+						<p class="fragment">memtable flushes / compactions / streaming </p>
+						<p class="fragment">scatter/gather</p>
+						<p class="fragment">not atomic with write (no MVCC)</p>
+						<p class="fragment">developer bandwidth</p>
+					</ul>
+				</section>
+
+				<section>
+				  <h2>Materialized views</h2>
+					<ul>
+						<p class="fragment">global secondary index</p>
+						<p class="fragment">no scatter/gather</p>
+				  </ul>
+				</section>
+				<section>
+				  <h2>SASI vs MView</h2>
+				  <table>
+					<thead>
+					  <tr>
+						<th></th>
+						<th>SASI</th>
+						<th>MView</th>
+					</thead>
+					<tbody>
+					  <tr class="fragment">
+						<td>structure</td>
+						<td>specialized data structure</td>
+						<td>standard column family</td>
+					  </tr>
+					  <tr class="fragment">
+						<td>data</td>
+						<td>node-local</td>
+						<td>distributed</td>
+					  </tr>
+					  <tr class="fragment">
+						<td>consistency</td>
+						<td>with sstable</td>
+						<td>depends on write/net partitions</td>
+					  </tr>
+					  <tr class="fragment">
+						<td>cardinality</td>
+						<td>low*-medium</td>
+						<td>high</td>
+					  </tr>
+					</tbody>
+				  </table>
+
+				  <aside class="notes">
+					  <p>
+						- cardinality - SASI w/high cardinality will have to request from many nodes to find data
+					  </p>
+				  </aside>
+				</section>
+				
+				<section>
 					<h2>Take aways</h2>
 					<ul>
 						<p class="fragment">- SASI is an advanced, efficient secondary index for Apache Cassandra</p>
+						<p class="fragment">- extended CQL grammar to support nuanced searching</p>
+						<p class="fragment">- Nothing is free, especially in databases</p>
 					</ul>
 				</section>
 
