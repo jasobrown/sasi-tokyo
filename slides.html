@@ -39,9 +39,9 @@
 					<ul>
 						<p class="fragment">background</p>
 						<p class="fragment">overview</p>
-						<p class="fragment">deep dive</p>
 						<p class="fragment">demo</p>
-						<p class="fragment">limitations</p>
+						<p class="fragment">internals</p>
+						<p class="fragment">limitations/alternatives</p>
 					</ul>
 				</section>
 
@@ -77,8 +77,7 @@
 				</section>
 
 				<section>
-					<!-- TODO:JEB change alignment here: -->
-					<h2>"sassy"</h2>
+				  <h2>"sassy"</h2>
 					<p>
 					<ul>
 						<li>having or showing a rude lack of respect</li>
@@ -96,18 +95,82 @@
 				<section>
 					<h2>Overview</h2>
 					<ul>
-						<p class="fragment">CQL Grammar</p>
 						<p class="fragment">Index configuration</p>
-						<p class="fragment">
-							Indexing<br>
-							- Write path<br>
-							- Read path
-						</p>
+						<p class="fragment">CQL Grammar</p>
+						<p class="fragment">Index selection</p>
 					</ul>
 				</section>
 
 				<section>
-					<h2>CQL Grammar</h2>
+				  <h3>Index modes</h3>
+				  <ul>
+					<li>PREFIX</li>
+					<li>CONTAINS</li>
+					<li>SPARSE</li>
+				  </ul>
+				  <aside class="notes">
+					- CONTAINS acts more as a suffix, than a literal 'this is somewhere in the string'
+				  </aside>
+				</section>
+
+				<section>
+				  <h4>PREFIX mode</h4>
+				  <pre><code class="hljs" data-trim contenteditable>
+					  term: dogs
+					  output: (dogs dog do d)
+					  example: SELECT * from table where name like 'jaso%';
+				  </code></pre>
+				  <br/>
+				  <h4>CONTAINS mode</h4>
+				  <pre><code class="hljs" data-trim contenteditable>
+					  term: dogs
+					  output: (dogs dog do d) (ogs og o) (gs g) (s)
+					  example: SELECT * from table where name like '%ason';
+				  </code></pre>
+				</section>
+
+				<section>
+				  <h4>Mode Storage</h4>
+				  <br/>
+				  <ul>
+					<li>PREFIX, SPARSE - literal value (once per file)</li>
+					<pre><code class="hljs" data-trim contenteditable>
+						input: Jason, Tomita
+						output: Jason, Tomita
+					</code></pre>
+					<br/>
+					<li>CONTAINS - literal value + recusive suffixes</li>
+					<pre><code class="hljs" data-trim contenteditable>
+						input: Jason, Tomita
+						output: (Jason ason son on n) (Tomita omita mita ita ta a)
+					</code></pre>
+				</section>
+
+				<section>
+				  <h3>Analyzers</h3>
+				  - allow tokenization and stemming (useful when you have a text blob)
+				  - best not to use tokenization for simple text fields (color, first_name)
+				</section>
+				
+				<section>
+				  <h2>CQL Grammar</h2>
+				  added:
+				  Like and '%'
+				  in original version:
+				  OR
+				  NOT_EQ
+				  grouped expressions
+				</section>
+
+				<section>
+				  <h2>Index selection</h2>
+				  <p>
+					native secondary indices vs SASI
+					</p>
+				  <aside class="notes">
+					- native 2I just selected a single index, the one with lowest cardinality
+					- SASI does a merge/union of all matching in indices
+				  </aside>
 				</section>
 
 				<!-- DEMO TIME -->
@@ -197,7 +260,11 @@
 				<section style="text-align: left;">
 					<h1>THE END</h1>
 					<p>
-						- <a href="https://github.com/jasobrown/sasi-tokyo">presentation source</a>
+					  <ul>
+						<li><a href="https://github.com/jasobrown/sasi-tokyo">presentation source</a></li>
+						<li><a href="https://github.com/apache/cassandra/docs/SASI.md">SASI docs</a></li>
+						<li><a href="https://github.com/xedin/sasi">SASI for cassandra 2.0</a></li>
+					  </ul>
 					</p>
 				</section>
 
