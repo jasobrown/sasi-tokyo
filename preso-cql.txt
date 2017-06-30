@@ -1,4 +1,4 @@
-create KEYSPACE jeb WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1} ;
+-- create KEYSPACE jeb WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1} ;
 use jeb;
 create table dogs (id int, name text, age int, weight int, color text, description text, created_at bigint, primary key (id));
 
@@ -12,15 +12,15 @@ insert into dogs (id, name, age, weight, color, created_at) values (6, 'bingo', 
 insert into dogs (id, name, age, weight, color, created_at) values (7, 'pavlov', 11, 21, 'black', 1256831489);
 
 -- index on name (mode: PREFIX)
-CREATE CUSTOM INDEX dog_name_idx ON jeb.dogs (name) USING 'org.apache.cassandra.index.sasi.SASIIndex' WITH OPTIONS = {'case_sensitive': 'false', 'analyzer_class': 'org.apache.cassandra.index.sasi.analyzer.NonTokenizingAnalyzer'};
+CREATE CUSTOM INDEX ON jeb.dogs (name) USING 'org.apache.cassandra.index.sasi.SASIIndex' WITH OPTIONS = {'case_sensitive': 'false', 'analyzer_class': 'org.apache.cassandra.index.sasi.analyzer.NonTokenizingAnalyzer'};
 
 -- index on color (mode: CONTAINS)
-CREATE CUSTOM INDEX dog_color_idx ON jeb.dogs (color) USING 'org.apache.cassandra.index.sasi.SASIIndex' WITH OPTIONS = {'case_sensitive': 'false', 'analyzer_class': 'org.apache.cassandra.index.sasi.analyzer.NonTokenizingAnalyzer', 'mode': 'CONTAINS'};
+CREATE CUSTOM INDEX ON jeb.dogs (color) USING 'org.apache.cassandra.index.sasi.SASIIndex' WITH OPTIONS = {'case_sensitive': 'false', 'analyzer_class': 'org.apache.cassandra.index.sasi.analyzer.NonTokenizingAnalyzer', 'mode': 'CONTAINS'};
 
 -- index on age
-CREATE CUSTOM INDEX dog_age_idx ON jeb.dogs (age) USING 'org.apache.cassandra.index.sasi.SASIIndex';
+CREATE CUSTOM INDEX ON jeb.dogs (age) USING 'org.apache.cassandra.index.sasi.SASIIndex';
 
-CREATE CUSTOM INDEX dog_description_idx ON jeb.dogs (description) USING 'org.apache.cassandra.index.sasi.SASIIndex' WITH OPTIONS = {'analyzer_class': 'org.apache.cassandra.index.sasi.analyzer.StandardAnalyzer', 'tokenization_enable_stemming': 'true', 'analyzed': 'true', 'tokenization_normalize_lowercase': 'true', 'tokenization_locale': 'en'};
+CREATE CUSTOM INDEX ON jeb.dogs (description) USING 'org.apache.cassandra.index.sasi.SASIIndex' WITH OPTIONS = {'analyzer_class': 'org.apache.cassandra.index.sasi.analyzer.StandardAnalyzer', 'tokenization_enable_stemming': 'true', 'analyzed': 'true', 'tokenization_normalize_lowercase': 'true', 'tokenization_locale': 'en'};
 
 -- description data
 insert into dogs (id, description) values (2, 'Snoopy is Charlie Browns pet beagle in the comic strip Peanuts by Charles M. Schulz. He can also be found in all of the Peanuts movies and television specials, like The Peanuts Movie.');
@@ -31,16 +31,3 @@ insert into dogs (id, description) values (4, 'Lassie is a fictional character c
 
 insert into dogs (id, description) values (5, 'Evelyn, a modified dog; Viewed the quivering fringe of a special doily; Draped across the piano, with some surprise');
 
-*****************************
-
-alter table jeb.dogs ADD description_jp text;
-
-CREATE CUSTOM INDEX dog_description_jp_idx ON jeb.dogs (description_jp) USING 'org.apache.cassandra.index.sasi.SASIIndex' WITH OPTIONS = {'analyzer_class': 'org.apache.cassandra.index.sasi.analyzer.StandardAnalyzer', 'tokenization_enable_stemming': 'true', 'analyzed': 'true', 'tokenization_normalize_lowercase': 'true', 'tokenization_locale': 'jp'};
-
-insert into dogs (id, description_jp) values (2, 'スヌーピーはチャールズ・M・シュルツの漫画「ピーナッツ」のチャーリー・ブラウンズのペットビーグルです。 彼はまた、ピーナッツムービーのようなピーナッツ映画やテレビのスペシャルのすべてに出演しています。');
-
-insert into dogs (id, description_jp) values (3, '八丈は、秋田県大日本の町の近くの農場で生まれた秋田の犬であった。 彼は所有者が死亡してから9年以上続いた彼の所有者に対する著しい忠誠心で覚えています。');
-
-insert into dogs (id, description_jp) values (4, 'ラッシーはエリック・ナイトによって作成された架空のキャラクターです。 彼女は女性ラフ・コリー・ドッグで、ショート・ストーリーでフィーチャーされ、その後、ラッシー・カム・ホームと呼ばれる長編小説にも展開されています');
-
-insert into dogs (id, description_jp) values (5, 'エヴリン、変更された犬; 特別なドッリーの震えを見ました。 いくつかの驚きとピアノを横切って覆われた');
