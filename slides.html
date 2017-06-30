@@ -204,6 +204,55 @@
 					<h2>DEMO TIME</h2>
 				</section>
 
+				<!-- INTERNALS -->
+				<section>
+				  <h2>Internals</h2>
+				  <aside class="notes">
+					- write path
+					-- in-memory
+					- read path
+					-- in-memory
+					-- on-disk
+				  </aside>
+				</section>
+
+				<section>
+				  <h4>Note:</h4>
+				  <p>for each cassandra data structure,<br/>there is a parallel SASI data structure</p>
+				  <aside class="notes">
+					even though 'SASI' is literally about sstables, it applies to memtables, as well
+				  </aside>
+				</section>
+
+				<section>
+				  <h2>Write path</h2>
+				  <P>MemIndex
+					<ul>
+					  <li>1-1 mapping of Memtable - MemIndex</li>
+					  <li>holds indexed terms of fresh mutations</li>
+					  <li>specialized versions</li>
+				  </p>
+				</section>
+
+				<section>
+				  <h4>MemIndex types</h4>
+					<ul>
+					  <li>ConcurrentPrefixTrie</li>
+					  <li>ConcurrentSuffixTrie</li>
+					  <br/>
+					  <li>SkipListMemIndex</li>
+					</ul>
+					<aside class="notes">
+					  <ul>
+						<li>Tries are for literal values -- use goolge concurrentrees lib</li>
+						<li>tries are used as they efficiently support prefix queries on character data</li>
+						<li>PrefixTrie is for mode=PREFIX</li>
+						<li>SuffixTrie is for mode=CONTAINS</li>
+						<li>SkipList is more for numeric types (and mode=SPARSE) -- use jdk ConcurrentSkipList</li>
+					</aside>
+				  </p>
+				</section>
+
 				<!-- CONCLUSION / WRAP UP / TAKE AWAYS -->
 				<section>
 				  <h2>Limitations</h2>
