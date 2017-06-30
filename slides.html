@@ -41,7 +41,7 @@
 						<p class="fragment">overview</p>
 						<p class="fragment">demo</p>
 						<p class="fragment">internals</p>
-						<p class="fragment">limitations/alternatives</p>
+						<p class="fragment">wrap up</p>
 					</ul>
 				</section>
 
@@ -88,7 +88,10 @@
 				</section>
 
 				<section>
-					<h2>生意気</h2>
+				  <h2>生意気</h2>
+				  <aside class="notes">
+					なまいき
+				  </aside>
 				</section>
 
 				<!-- OVERVIEW OF SASI CHANGES -->
@@ -96,7 +99,7 @@
 					<h2>Overview</h2>
 					<ul>
 						<p class="fragment">Index configuration</p>
-						<p class="fragment">CQL Grammar</p>
+						<p class="fragment">CQL grammar</p>
 						<p class="fragment">Index selection</p>
 					</ul>
 				</section>
@@ -115,14 +118,14 @@
 
 				<section>
 				  <h4>PREFIX mode</h4>
-				  <pre><code class="hljs" data-trim contenteditable>
+				  <pre><code class="hljs" data-trim>
 					  term: dogs
 					  output: (dogs dog do d)
 					  example: SELECT * from table where name like 'jaso%';
 				  </code></pre>
 				  <br/>
 				  <h4>CONTAINS mode</h4>
-				  <pre><code class="hljs" data-trim contenteditable>
+				  <pre><code class="hljs" data-trim>
 					  term: dogs
 					  output: (dogs dog do d) (ogs og o) (gs g) (s)
 					  example: SELECT * from table where name like '%ason';
@@ -134,13 +137,13 @@
 				  <br/>
 				  <ul>
 					<li>PREFIX, SPARSE - literal value (once per file)</li>
-					<pre><code class="hljs" data-trim contenteditable>
+					<pre><code class="hljs" data-trim>
 						input: Jason, Tomita
 						output: Jason, Tomita
 					</code></pre>
 					<br/>
-					<li>CONTAINS - literal value + recusive suffixes</li>
-					<pre><code class="hljs" data-trim contenteditable>
+					<li>CONTAINS - literal value + recursive suffixes</li>
+					<pre><code class="hljs" data-trim>
 						input: Jason, Tomita
 						output: (Jason ason son on n) (Tomita omita mita ita ta a)
 					</code></pre>
@@ -148,25 +151,48 @@
 
 				<section>
 				  <h3>Analyzers</h3>
-				  - allow tokenization and stemming (useful when you have a text blob)
-				  - best not to use tokenization for simple text fields (color, first_name)
+				  <ul>
+					<li>tokenization</li>
+					<li>stemming</li>
+					<li>stop word elimination</li>
+				  </ul>
+				  <aside class="notes">
+					- tokenization primarily English (and a few other European languages)
+				  </aside>
 				</section>
 				
 				<section>
 				  <h2>CQL Grammar</h2>
-				  added:
-				  Like and '%'
-				  in original version:
-				  OR
-				  NOT_EQ
-				  grouped expressions
+				  <h4>OSS SASI (cassandra 3.4)</h4>
+				  <ul>
+					<li>LIKE</li>
+					<li>%</li>
+					<li>filtering expressions</li>
+				  </ul>
+				  <pre><code class="hljs" data-trim>
+					  select * from table where name like '%ason'
+					      and height > 180;
+				  </code></pre>
+				</section>
+
+				<section>
+				  <h4>cassandra 2.0 SASI</h4>
+				  <ul>
+					<li>OR</li>
+					<li>NOT_EQ</li>
+					<li>grouped expressions</li>
+				  </ul>
+				  <pre><code class="hljs" data-trim>
+					  select * from table where name like '%ason'
+					      or (name like 'tomit%' and height != 200);
+				  </code></pre>
 				</section>
 
 				<section>
 				  <h2>Index selection</h2>
 				  <p>
 					native secondary indices vs SASI
-					</p>
+				  </p>
 				  <aside class="notes">
 					- native 2I just selected a single index, the one with lowest cardinality
 					- SASI does a merge/union of all matching in indices
