@@ -421,15 +421,45 @@
 				</section>
 
 				<section>
-				  TODO:JEB create 'graph' showing how iterators connect to each other to get tokens
+				  <h4>Heirarchy of iterators</h4>
+				  <!-- graph showing how iterators connect to each other to get tokens -->
+				  <pre>QueryPlan.ResultIterator
+-> Operation
+--> RII (for each expression)
+---> TermIterator
+----> RUI
+-----> RUI (memtables)
+------> RUI (current memtable)
+--------> KeyRangeIterator
+------> RUI (pending memtables)
+--------> KeyRangeIterator
+-----> RUI (one for each indexed sstable)
+------> PrefetchedTokensIter (SPARSE & op=EQ)
+------> TokenTreeIterator (op=EQ)
+------> RUI (NOT_EQ)
+-------> RUI (for ranges in sstable)
+--------> search by point (PrefetchedTokensIter | TokenTreeIterator)
+--------> RUI - search by ranges
+---------> RUI (PrefetchedTokensIter | TokenTreeIterator)
+---------> RUI (for super blocks ....)</pre>
+												   <aside class="notes">
+													 loose graph of a 'simple' SASI lookup
+												   </aside>
+		        </section>
+
+				<section>
+				  <!-- cogs gif -->
+				  <img data-src="./img/cogs.gif"/>
+				  <p style="font-size: 14px;">https://giphy.com/gifs/animation-background-cogs-xTiTnI1mdyxsFKTFjW/</p>
 				</section>
 
 				<section>
-				  TODO:JEB insert gif with cogs (to demonstrate (lazy) itrerators)
+				  <!-- say iterator one more time -->
+				  <img width="600" height="450" data-src="./img/say-iterator.jpg"/>
 				</section>
 
 				<section>
-				  TODO:JEB insert meme with "say iterator one more time"
+				  <h2>Wrapping up...</h2>
 				</section>
 
 				<!-- CONCLUSION / WRAP UP / TAKE AWAYS -->
