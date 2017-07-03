@@ -43,6 +43,9 @@
 						<p class="fragment">internals</p>
 						<p class="fragment">wrap up</p>
 					</ul>
+					<aside class="notes">
+					  - taking an "outside to inside" approach
+					</aside>
 				</section>
 
 				<!-- BACKGROUND SECTION -->
@@ -105,6 +108,19 @@
 				</section>
 
 				<section>
+					<h2>NOTE: Sorting</h2>
+					<p>Token sorted-order</p>
+					<ul>
+					  <li>memtables</li>
+					  <li>sstables</li>
+					  <li>SASI indices</li>
+					</ul>
+					<aside class="notes">
+					  everything in c* is sorted in token order
+					</aside>
+				</section>
+
+				<section>
 				  <h3>Index modes</h3>
 				  <ul>
 					<li>PREFIX</li>
@@ -138,14 +154,14 @@
 				  <ul>
 					<li>PREFIX, SPARSE - literal value (once per file)</li>
 					<pre><code class="hljs" data-trim>
-						input: Jason, Tomita
-						output: Jason, Tomita
+						input: Jason, とみた
+						output: Jason, とみた
 					</code></pre>
 					<br/>
 					<li>CONTAINS - literal value + recursive suffixes</li>
 					<pre><code class="hljs" data-trim>
-						input: Jason, Tomita
-						output: (Jason ason son on n) (Tomita omita mita ita ta a)
+						input: Jason,　とみた
+						output: (Jason ason son on n) (とみた みた た)
 					</code></pre>
 				</section>
 
@@ -210,6 +226,7 @@
 				  <aside class="notes">
 					- write path
 					-- in-memory
+					-- file creation
 					- read path
 					-- in-memory
 					-- on-disk
@@ -230,27 +247,189 @@
 					<ul>
 					  <li>1-1 mapping of Memtable - MemIndex</li>
 					  <li>holds indexed terms of fresh mutations</li>
-					  <li>specialized versions</li>
+					  <li>Analyzer generates terms for index*</li>
+					  <li>specialized versions of memory index</li>
 				  </p>
 				</section>
 
 				<section>
 				  <h4>MemIndex types</h4>
+				  <ul>
+					<li>ConcurrentPrefixTrie</li>
+					<li>ConcurrentSuffixTrie</li>
+					<br/>
+					<li>SkipListMemIndex</li>
+				  </ul>
+				  <aside class="notes">
 					<ul>
-					  <li>ConcurrentPrefixTrie</li>
-					  <li>ConcurrentSuffixTrie</li>
-					  <br/>
-					  <li>SkipListMemIndex</li>
+					  <li>Tries are for literal values -- use goolge concurrentrees lib</li>
+					  <li>tries are used as they efficiently support prefix queries on character data</li>
+					  <li>PrefixTrie is for mode=PREFIX</li>
+					  <li>SuffixTrie is for mode=CONTAINS</li>
+					  <li>SkipList is more for numeric/other types (and mode=SPARSE) -- use jdk ConcurrentSkipList</li>
+				  </aside>
+				</section>
+
+				<section>
+				  <h2>On-disk file creation</h2>
+				  <p>same for memtable flush, compaction, streaming</p>
+				  <br/>
+				  <ul>
+					<li>iterate sorted partitions</li>
+					<li>listen for each CQL row</li>
+					<li>for each index on table, index the columns in row</li>
+				  </ul>
+				  <p>column values become terms in the index</p>
+				  <aside class="notes">
+					HIGH LEVEL OVERVIEW
+					<ul>
+					  <li>SASI indices are flushed with memtable, on same thread!</li>
+					  <li>terms point to a 'set' of partition offsets into the sstable (the matching rows)</li>
 					</ul>
-					<aside class="notes">
-					  <ul>
-						<li>Tries are for literal values -- use goolge concurrentrees lib</li>
-						<li>tries are used as they efficiently support prefix queries on character data</li>
-						<li>PrefixTrie is for mode=PREFIX</li>
-						<li>SuffixTrie is for mode=CONTAINS</li>
-						<li>SkipList is more for numeric types (and mode=SPARSE) -- use jdk ConcurrentSkipList</li>
-					</aside>
-				  </p>
+				  </aside>
+				</section>
+
+				<section>
+				  <h4>Mode Storage (again)</h4>
+				  <br/>
+				  <ul>
+					<li>PREFIX, SPARSE - literal value (once per file)</li>
+					<pre><code class="hljs" data-trim>
+						input: Jason, とみた
+						output: Jason, とみた
+					</code></pre>
+					<li>CONTAINS - literal value + recursive suffixes</li>
+					<pre><code class="hljs" data-trim>
+						input: Jason,　とみた
+						output: (Jason ason son on n) (とみた みた た)
+					</code></pre>
+					<li>CONTAINS - tokenized literal value + suffixes</li>
+					<pre><code class="hljs" data-trim>
+						input: Jason is tall
+						output: (Jason ason son on n) (is s) (tall all ll l)
+					</code></pre>
+				  <aside class="notes">
+					<ul>
+					  <li>column values are fed into the index's analyzer, which outputs terms for index</li>
+					  <li>if mode=CONTAINS, we generate all the suffixes (like a Suffix Array/Tree)</li>
+					</ul>
+				  </aside>
+				</section>
+
+				<section>
+				  FILE FORMAT
+				  - describe B+ tree
+				  - builds leaf layer first (with all data)
+				  - as each term page is filled, we promote the last term to a higher level to build up the B+ tree
+				  - after all data blocks are written , we serialize out the B+ tree from the next level up, and recurse up to the root
+				  - then metadata is written, capturing the file offset of where the metadata starts
+				  -- that offset is written as the last long of the file (to help opening the file on restart)
+				</section>
+
+				<section>
+				  <h4>Token Tree</h4>
+				  <p>stores file offsets for each row matching the term</p>
+				  <ul>
+					<li>B+ tree of tokens->file offset(s)</li>
+					<li>tokens are of the partition keys whose columns match the term</li>
+					<li>accounts for the unlikely case of token collision</li>
+				  </ul>
+				</section>
+
+				<section>
+				  <h2>Read path</h2>
+				  <ul>
+					<p class="fragment">Query planner</p>
+					<p class="fragment">Iterators</p>
+				  </ul>
+				  <aside class="notes">
+					<p>We've indexed some data, now let's use it</p>
+				  </aside>
+				</section>
+				
+				<section>
+				  <h2>Query Planner</h2>
+				  <ul>
+					<li>builds optimized expression tree</li>
+					<li>simplifies expressions</li>
+				  </ul>
+				  <pre><code class="hljs" data-trim>
+					  select * from dogs where age > 4 and age <= 10;
+					  select * from dogs where 4 < age <= 10;
+		          </code></pre>
+				  <aside>
+					output of query plan is a set of iterators that we process to find matches
+				  </aside>
+				</section>
+
+				<section>
+				  <h2>Iterators</h2>
+				  <ul>
+					<p class="fragment">output tokens that match expressions</p>
+					<p class="fragment">iterate indices for memtables, sstables for each expression</p>
+					<p class="fragment">load paritions, test each CQL row</p>
+					<p class="fragment"></p>
+				  </ul>
+				  <aside class="notes">
+					just because we find matches for the expressions in *some* set of sstable indices for the row, updated column values/TTLs/deletions may no longer satisfy the expressions
+				  </aside>
+				</section>
+
+				<section>
+				  TODO:JEB create simple image with sample matching query
+				</section>
+
+				<section>
+				  TODO:JEB create simple image with sample query, but column value is updated to non-matching value
+				</section>
+
+				<section>
+				  TODO:JEB create simple image with sample query, but column is TTL'd
+				</section>
+
+				<section>
+				  <h2>Iterator Types</h2>
+				  <ul>
+					<li>RangeIterator</li>
+					<li>union - RangeUnionIterator</li>
+					<li>intersection - RangeInterstionIterator</li>
+				  </ul>
+				</section>
+
+				<section>
+				  <h4>In-memory Iterator</h4>
+				  <p>KeyRangeIterator</p>
+				  <aside class="notes">
+					simply gathers up the in-memory DecoratedKeys, and creates a KRI for each token
+				  </aside>
+				</section>
+				
+				<section>
+				  <h4>On-disk Iterators</h4>
+				  <p>RangeIntersectionIterator</p>
+				  <ul>
+					<li>Lookup</li>
+					<li>Bounce</li>
+				  </ul>
+				  <aside class="notes">
+					<p>different optimizations for merging multiple iterators</p>
+					<ul>
+					  <li>LOOKUP - linear scan of a small range to see if it interesects with a larger range. efficient when one range is small</li>
+					  <li>BOUNCE - merge-join of the ranges, looking for matches. efficient in jumping over ranges</li>
+					</ul>
+				  </aside>
+				</section>
+
+				<section>
+				  TODO:JEB create 'graph' showing how iterators connect to each other to get tokens
+				</section>
+
+				<section>
+				  TODO:JEB insert gif with cogs (to demonstrate (lazy) itrerators)
+				</section>
+
+				<section>
+				  TODO:JEB insert meme with "say iterator one more time"
 				</section>
 
 				<!-- CONCLUSION / WRAP UP / TAKE AWAYS -->
@@ -262,6 +441,7 @@
 						<p class="fragment">memtable flushes / compactions / streaming </p>
 						<p class="fragment">scatter/gather</p>
 						<p class="fragment">not atomic with write (no MVCC)</p>
+						<p class="fragment">wide rows are a problem (> 10s MBs)</p>
 						<p class="fragment">developer bandwidth</p>
 					</ul>
 				</section>
