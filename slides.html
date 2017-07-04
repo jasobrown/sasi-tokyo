@@ -253,6 +253,9 @@
 					  <p class="fragment">Analyzer generates terms for index</p>
 					  <p class="fragment">specialized versions of memory index</p>
 				  </p>
+				  <aside class="notes">
+					and we throw it away when we flush the memtable!
+				  </aside>
 				</section>
 
 				<section>
@@ -311,6 +314,7 @@
 					<pre><code class="hljs" data-trim>
 						input: Jason is tall
 						output: (Jason ason son on n) (is s) (tall all ll l)
+						sorted: all ason is Jason l ll n on s son tall 
 					</code></pre>
 				  <aside class="notes">
 					<ul>
@@ -321,7 +325,7 @@
 				</section>
 
 				<section>
-				  <h4>B+ tree</h4>
+				  <h4>File format: B+ tree</h4>
 				  <pre>
       +-------+
       |  (5)  |         <- root pointer layer
@@ -368,7 +372,7 @@
 				</section>
 
 				<section>
-				  <h4>Token Tree</h4>
+				  <h4>Data Blocks: Token Tree</h4>
 				  <p>stores file offsets for each row matching the term</p>
 				  <ul>
 					<li>B+ tree of tokens->file offset(s)</li>
@@ -455,7 +459,7 @@
 |    SST 0   |                  |    SST 1   |
 +------------+                  +------------+
 
-{ id: 1, name: snoopy, ts: t0}  { id: 1, age: 10, ts: t2 }
+{ id: 1, name: snoopy, ts: t0}  { id: 1, age: 10, ts: t5 }
 		          </code></pre>
 				</section>
 
@@ -464,7 +468,7 @@
 				  <ul>
 					<li>RangeIterator</li>
 					<li>union - RangeUnionIterator</li>
-					<li>intersection - RangeInterstionIterator</li>
+					<li>intersection - RangeIntersectionIterator</li>
 				  </ul>
 				</section>
 
@@ -531,7 +535,7 @@
 				</section>
 
 				<section>
-				  <h2>Wrapping up...</h2>
+				  <h2>Pulling it all together...</h2>
 				</section>
 
 				<!-- CONCLUSION / WRAP UP / TAKE AWAYS -->
@@ -654,6 +658,5 @@
 			});
 
 		</script>
-
 	</body>
 </html>
