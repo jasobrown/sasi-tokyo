@@ -1,4 +1,4 @@
--- create KEYSPACE jeb WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1} ;
+ create KEYSPACE jeb WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1} ;
 use jeb;
 create table dogs (id int, name text, age int, weight int, color text, description text, created_at bigint, primary key (id));
 

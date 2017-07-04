@@ -90,13 +90,6 @@
 					</p>
 				</section>
 
-				<section>
-				  <h2>生意気</h2>
-				  <aside class="notes">
-					なまいき
-				  </aside>
-				</section>
-
 				<!-- OVERVIEW OF SASI CHANGES -->
 				<section>
 					<h2>Overview</h2>
@@ -169,12 +162,25 @@
 				  <h3>Analyzers</h3>
 				  <ul>
 					<li>tokenization</li>
-					<li>stemming</li>
-					<li>stop word elimination</li>
+					<li>stemming [1]</li>
+					<li>stop word elimination [2]</li>
 				  </ul>
+				  <p style="font-size: 14px;">
+					[1] <a href="https://en.wikipedia.org/wiki/Stemming">https://en.wikipedia.org/wiki/Stemming</a><br/>
+					[2] <a href="http://members.unine.ch/jacques.savoy/clef/index.html">http://members.unine.ch/jacques.savoy/clef/index.html</a>
+				  </p>
 				  <aside class="notes">
 					- tokenization primarily English (and a few other European languages)
 				  </aside>
+				</section>
+
+				<section>
+				  <h4>Anaylzer example</h4>
+				  <pre><code class="hljs" data-trim>
+					  "The dogs are coming home"
+					  included: dog dogs coming home
+					  excluded: The are
+				  </code></pre>
 				</section>
 				
 				<section>
@@ -235,20 +241,17 @@
 
 				<section>
 				  <h4>Note:</h4>
-				  <p>for each cassandra data structure,<br/>there is a parallel SASI data structure</p>
-				  <aside class="notes">
-					even though 'SASI' is literally about sstables, it applies to memtables, as well
-				  </aside>
+				  <p>even though 'SASI' is literally about sstables,<br/>it applies to memtables, as well</p>
 				</section>
 
 				<section>
 				  <h2>Write path</h2>
 				  <P>MemIndex
 					<ul>
-					  <li>1-1 mapping of Memtable - MemIndex</li>
-					  <li>holds indexed terms of fresh mutations</li>
-					  <li>Analyzer generates terms for index*</li>
-					  <li>specialized versions of memory index</li>
+					  <p class="fragment">1-1 mapping of Memtable - MemIndex</p>
+					  <p class="fragment">holds indexed terms of fresh mutations</p>
+					  <p class="fragment">Analyzer generates terms for index</p>
+					  <p class="fragment">specialized versions of memory index</p>
 				  </p>
 				</section>
 
@@ -277,12 +280,13 @@
 				  <ul>
 					<li>iterate sorted partitions</li>
 					<li>listen for each CQL row</li>
-					<li>for each index on table, index the columns in row</li>
+					<li>for each column in row, check if indexed</li>
+					<li>feed column value into index -> analyzer</li>
 				  </ul>
-				  <p>column values become terms in the index</p>
 				  <aside class="notes">
 					HIGH LEVEL OVERVIEW
 					<ul>
+					  <li>explain how fluch/compact/stream mechanics are the same</li>
 					  <li>SASI indices are flushed with memtable, on same thread!</li>
 					  <li>terms point to a 'set' of partition offsets into the sstable (the matching rows)</li>
 					</ul>
@@ -317,13 +321,50 @@
 				</section>
 
 				<section>
-				  FILE FORMAT
-				  - describe B+ tree
-				  - builds leaf layer first (with all data)
-				  - as each term page is filled, we promote the last term to a higher level to build up the B+ tree
-				  - after all data blocks are written , we serialize out the B+ tree from the next level up, and recurse up to the root
-				  - then metadata is written, capturing the file offset of where the metadata starts
-				  -- that offset is written as the last long of the file (to help opening the file on restart)
+				  <h4>B+ tree</h4>
+				  <pre>
+      +-------+
+      |  (5)  |         <- root pointer layer
+      +-------+
+     /         \
+ +-----+    +-------+
+ |(2,5)|    |  (12) |    <- interior pointer layer
+ +-----+    +-------+
+ /     \    /       \
++----+----+-----+------+
+|1..2|3..5|7..12|19..20| <- data layer
++----+----+-----+------+
+							</pre>
+				  <aside class="notes">
+					<ul>
+					  <li>EVERYTHING IS A 4k PAGE</li>
+					  <li>build data layer first</li>
+					  <li>promote 'last key' when data page is full</li>
+					</ul>
+				  </aside>
+				</section>
+
+				<section>
+				  <h4>on-disk representation</h4>
+				  <pre>
++--------+-------+-------+-------+-------+-------+-------+
+| header | data0 | data1 | data2 | data3 | data4 | data5 |
++--------+-------+-------+-------+-------+-------+-------+
+
++-------+-------+---------+---------+----------+---------+
+| data6 | data7 | header0 | header1 | metadata | pointer |
++-------+-------+---------+---------+----------+---------+
+				  </pre>
+				  <ul>
+					<li>header - version, min/max term, min/max PK, mode</li>
+					<li>metadata - level count, ptr metadata, data metadata</li>
+				  </ul>
+				  <aside class="notes">
+					<ul>
+					<li>highly efficient way to serialize a B+ tree, which is read-only</li>
+					<li>we'll never bring all into memory</li>
+					<li>only metadata is maintained in memory, everything else is read at query time</li>
+				  </aside>
 				</section>
 
 				<section>
@@ -332,7 +373,7 @@
 				  <ul>
 					<li>B+ tree of tokens->file offset(s)</li>
 					<li>tokens are of the partition keys whose columns match the term</li>
-					<li>accounts for the unlikely case of token collision</li>
+					<li>accounts for token collision</li>
 				  </ul>
 				</section>
 
@@ -376,15 +417,46 @@
 				</section>
 
 				<section>
-				  TODO:JEB create simple image with sample matching query
+				  <h4>read example: matching query</h4>
+				  <pre><code class="hljs" data-trim>
+					  select * from dogs where name like 'snoop%' and age > 4;
+		          </code></pre>
+				  <pre><code class="hljs" data-trim>
++------------+             +------------+
+|    SST 0   |             |    SST 1   |
++------------+             +------------+
+
+{ id: 1, name: snoopy}     { id: 1, age: 10 }
+		          </code></pre>
 				</section>
 
 				<section>
-				  TODO:JEB create simple image with sample query, but column value is updated to non-matching value
+				  <h4>read example: mismatching query</h4>
+				  <pre><code class="hljs" data-trim>
+					  select * from dogs where name like 'snoop%' and age > 4;
+		          </code></pre>
+				  <pre><code class="hljs" data-trim>
++------------+          +------------+      +------------+
+|    SST 0   |          |    SST 1   |      |    SST 2   |
++------------+          +------------+      +------------+
+
+{ id: 1, name: snoopy}  { id: 1, age: 10}   { id: 1, age: 2}
+		          </code></pre>
 				</section>
 
 				<section>
-				  TODO:JEB create simple image with sample query, but column is TTL'd
+				  <h4>read example: TTL'd data</h4>
+				  <pre><code class="hljs" data-trim>
+					 select * from dogs where name like 'snoop%' and age > 4;
+						executed at t12
+		          </code></pre>
+				  <pre><code class="hljs" data-trim>
++------------+                  +------------+
+|    SST 0   |                  |    SST 1   |
++------------+                  +------------+
+
+{ id: 1, name: snoopy, ts: t0}  { id: 1, age: 10, ts: t2 }
+		          </code></pre>
 				</section>
 
 				<section>
@@ -527,10 +599,9 @@
 				  <h2>Upcoming work</h2>
 				  <ul>
 					<p class="fragment">address rows, not partitions (#11990)</p>
-					<p class="fragment">support CQL collections</p>
-					<p class="fragment">support OR, grouped expressions (#10765)</p>
-					<p class="fragment">support NOT_EQ (!=) operator</p>
-					<p class="fragment">memory, compaction improvements</p>
+					<p class="fragment">support CQL collections, partition components</p>
+					<p class="fragment">support OR, grouped expressions, 'NOT LIKE'</p>
+					<p class="fragment">bug fixes, memory/compaction improvements</p>
 				  </ul>
 				</section>
 				<section>
